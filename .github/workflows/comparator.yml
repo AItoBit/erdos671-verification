@@ -1,6 +1,14 @@
 name: Compare Erdos 671 proof
 on:
   push:
+    paths:
+      - Challenge.lean
+      - prepare_ci.py
+      - comparator.json
+      - lakefile.toml
+      - lake-manifest.json
+      - lean-toolchain
+      - .github/workflows/comparator.yml
   workflow_dispatch:
 permissions:
   contents: read

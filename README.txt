@@ -22,8 +22,19 @@ substantive proof repository. The Solution is generated transiently by CI and
 excluded from Git; only verification logs are retained.
 
 Comparator is run with actual Bubblewrap isolation, Lean's kernel, and the
-additional checkers bundled with the pinned Lean toolchain. No fake sandbox or
+NanoDa and con-ron bundled with the pinned Lean toolchain, as selected by the
+current Palomar profile. No fake sandbox or
 --inadvisably-no-sandbox option is used. This comparison does not replace
 Palomar's complete mechanical preflight, which additionally checks a licensed,
 public source snapshot, metadata, canonical dependencies, source provenance,
 and resource measurements.
+
+The manual "Palomar full mechanical preflight" workflow is also installed.
+It calls the complete official workflow with mode=full and profile
+palomar-standard-v1, with both the workflow reference and pipeline_commit pinned
+to d4e41c1d5b0d114c4859e6e5831dc6d3ad1d0d44. Supply a public, licensed proof
+repository, its immutable commit and optional project paths once those exist.
+The verification runner itself is not an eligible substitute for that source.
+Only a resulting official mechanical report with status=pass completes that
+preflight. This workflow has not been dispatched for the unresolved-license
+proof and does not assert any person's authorization relationship.
