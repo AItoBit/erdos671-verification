@@ -23,8 +23,8 @@ text = text.replace("\nprivate def lagrangeValue ", "\ndef lagrangeValue ")
 for old, new in [("if_pos", "ite_eq_left"), ("if_neg", "ite_eq_right"),
                  ("dif_pos", "dite_eq_left"), ("dif_neg", "dite_eq_right")]:
     text = re.sub(r"\b" + old + r"\b", new, text)
-text = text.rstrip("\n")
-assert hashlib.sha256(text.encode()).hexdigest() == "7afa5e45a37bca458e92faa90880865d3536f3677442a92d60beda806407efad"
+text = text.rstrip("\n") + "\n"
+assert hashlib.sha256(text.encode()).hexdigest() == "0649de4866a55bb65e9dba72747f6a842ae758dfc79f90ba1b6ca8bfa4b3c22b"
 Path("Solution.lean").write_text(text, encoding="utf-8", newline="\n")
 print("Retrieved original SHA256:", hashlib.sha256(raw).hexdigest())
 print("Ported Solution SHA256:", hashlib.sha256(text.encode()).hexdigest())
