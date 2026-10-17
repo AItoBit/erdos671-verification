@@ -1,0 +1,49 @@
+name: Compare Erdos 671 proof
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  comparator:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Install pinned Bubblewrap
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq meson ninja-build libcap-dev pkg-config
+          curl -fsSL https://raw.githubusercontent.com/PalomarRegistry/PalomarSubmission/d4e41c1d5b0d114c4859e6e5831dc6d3ad1d0d44/scripts/install_bwrap.sh -o "$RUNNER_TEMP/install_bwrap.sh"
+          echo "COMPARATOR_BWRAP=$(bash "$RUNNER_TEMP/install_bwrap.sh" "$RUNNER_TEMP/erdos671-bwrap")" >> "$GITHUB_ENV"
+      - name: Install Lean toolchain
+        run: |
+          curl -fsSL https://github.com/leanprover/elan/releases/download/v4.2.3/elan-x86_64-unknown-linux-gnu.tar.gz -o "$RUNNER_TEMP/elan.tar.gz"
+          echo "df0b2b3a439961ffcbb3985214365ffe40f49bc871df04dff268c7d8e21ca8b2  $RUNNER_TEMP/elan.tar.gz" | sha256sum -c -
+          mkdir "$RUNNER_TEMP/elan"
+          tar -xzf "$RUNNER_TEMP/elan.tar.gz" -C "$RUNNER_TEMP/elan"
+          "$RUNNER_TEMP/elan/elan-init" -y --no-modify-path --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/elan" toolchain install leanprover/lean4:v4.35.0-rc3
+      - name: Retrieve original proof and apply compatibility port
+        run: python3 prepare_ci.py
+      - name: Fetch canonical pinned Mathlib cache
+        run: lake exe cache get
+      - name: Compare and replay with bundled independent checkers
+        run: |
+          set -o pipefail
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          config = json.loads(pathlib.Path("comparator.json").read_text())
+          binary_dir = pathlib.Path(subprocess.check_output(["elan", "which", "lean"], text=True).strip()).parent
+          config["external_kernels"] = {"nanoda": [str(binary_dir / "nanoda_bin")], "con-ron": [str(binary_dir / "con-ron"), "--jobs=2"]}
+          pathlib.Path("comparator-kernels.json").write_text(json.dumps(config))
+          PY
+          lake comparator --config comparator-kernels.json 2>&1 | tee comparator.log
+      - name: Retain verification log
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: comparator-log
+          path: comparator.log
+          if-no-files-found: ignore

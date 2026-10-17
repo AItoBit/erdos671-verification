@@ -1,0 +1,4 @@
+.lake/
+Solution.lean
+*.ndjson
+*.export
